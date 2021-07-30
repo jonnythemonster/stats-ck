@@ -176,27 +176,11 @@ data.gesamt$R_CK18[which(data.gesamt$CK18!=levels(data.gesamt$CK18)[1])] <- 0
 
 
 #### Häufigkeitstabellen mal aus Interesse ;-) #####
-table(data.gesamt$R_CK01)
-table(data.gesamt$R_CK02)
-table(data.gesamt$R_CK03)
-table(data.gesamt$R_CK04)
-table(data.gesamt$R_CK05)
-table(data.gesamt$R_CK06)
-table(data.gesamt$R_CK07)
-table(data.gesamt$R_CK08)
-table(data.gesamt$R_CK09)
-table(data.gesamt$R_CK10)
-table(data.gesamt$R_CK11)
-table(data.gesamt$R_CK12)
-table(data.gesamt$R_CK13)
-table(data.gesamt$R_CK14)
-table(data.gesamt$R_CK15)
-table(data.gesamt$R_CK16)
-table(data.gesamt$R_CK17)
-table(data.gesamt$R_CK18)
+sapply(data.gesamt[21:38], table)
 
-
-
+m <- sapply(data.recode, mean)
+names(which(m <.2))
+#-> R_CK05 entfernen
 
 #### Identifikation von Ausreißern #####
 data.recode <- data.gesamt[,21:38]
@@ -205,27 +189,35 @@ mean <- apply(data.recode, 2, mean)
 boxplot(mean)
 
 
+
 #### Trennschärfen #####
 library(psych)
 iac <- alpha(data.recode)
 
+#Trennschärfen über gesammten Fragebogen
 trennschärfe <- iac$item.stats$r.drop
+#Namen der Items
 names(data.recode)
+#Übersicht über alle Items
+tr.data <- data.frame(names(data.recode), trennschärfe)
 
-
-tr.data <- data.frame(names(data.recode), t)
-
+#Trennung in Atombau und Chemische Reaktion
 data.cr <- data.recode[,1:9]
 data.a <- data.recode[,10:18]
 
+#Berechnung separater Trennschärfen
 iac.cr <- alpha(data.cr)
 iac.a <- alpha(data.a)
-
 t.cr <- iac.cr$item.stats$r.drop
 t.a <- iac.a$item.stats$r.drop
 
+#Zusammenführen der einzelnen Testteile
 t <- c(t.cr, t.a)
 
+#Übersicht berechnet nach Themebereichen
+tr.data.getrennt <- data.frame(names(data.recode), t)
+tr.data.getrennt$names.data.recode.[which(tr.data.getrennt$t <.15)]
+# -> "R_CK01" "R_CK02" "R_CK05" "R_CK06" "R_CK15" entfernen
 
 
 
@@ -237,10 +229,14 @@ data.vergleich <- data.frame(data.recode$score, data.gesamt$FS, data.gesamt$SG)
 names(data.vergleich) <- c("score", "FS", "SG")
 data.vergleich$FS[which(data.vergleich$FS>1)] <- 2
 
+
+
 #### Varianzhomogenität?
 library(car)
 leveneTest(data.vergleich$score, data.vergleich$FS)
 # .3229 --> Varianzhomogenität
+
+
 
 ### Normalverteilung?
 data.v1 <- data.vergleich[which(data.vergleich$FS==1),]
@@ -249,22 +245,34 @@ shapiro.test(data.v1$score)
 shapiro.test(data.v2$score)
 
 
+
 ### T-Test
+#funktioniert nicht, warum?
 t.test(data.vergleich$score~data.vergleich$FS, var.equal =T)
+#Korrektur, richtig?
+t.test(data.vergleich$score, data.vergleich$FS, var.equal =T)
 
 
-##### Schulartenvergleich #####
+
+
+##### Studierendenvergleich #####
 table(data.vergleich$SG)
 
 data.sg <- data.v1[which(data.v1$SG==1 | data.v1$SG==3),]
 
-leveneTest(data.sg$score, data.sg$SG) ## Varianzhomogenität
+# Varianzhomogenität -> gegeben
+library(lawstat)
+lev <- levene.test(data.sg$score, data.sg$SG)
+lev_r <- lev[["non.bootstrap.p.value"]]
 
 data.sg1 <- data.sg[which(data.sg$SG==1),]
 data.sg2 <- data.sg[which(data.sg$SG==3),]
 
+#Test auf Normalverteilung
 shapiro.test(data.sg1$score)
+# -> Normalverteilung
 shapiro.test(data.sg2$score)
+# -> Normalverteilung
 
 t.test(data.sg$score~data.sg$SG, var.equal = T)
 
@@ -273,3 +281,9 @@ mean(data.sg2$score)
 
 library(effectsize)
 cohens_d(data.sg1$score, data.sg2$score)
+
+
+
+##### Reliabilität #####
+#Cronbachs alpha für gesamten
+alpha(data.recode[,c(1:18)])
