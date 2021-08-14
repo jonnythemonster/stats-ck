@@ -26,6 +26,7 @@ table(data.Jonas.Stichprobe[,1])
 table(data.Jonas.Stichprobe[,2])
 #Abiturfach
 table(data.Jonas.Stichprobe[,4])
+data.Jonas.Stichprobe$D007[data.Jonas.Stichprobe$D004 == "nein"]
 table(data.Jonas.Stichprobe[,3])
 
 #letzte Chemiestunde
